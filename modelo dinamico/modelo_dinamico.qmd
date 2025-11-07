@@ -1,0 +1,166 @@
+---
+title: "modelo dinamico"
+editor: visual
+---
+
+```{r}
+head(inpc)
+```
+
+```{r}
+dim(inpc)
+```
+
+Obtener los trimestres
+
+```{r}
+# Inicializar vectores correctamente
+list_inpc <- c()
+list_años <- c()
+
+# Bucle corregido - usar paréntesis en seq() y nombres consistentes
+for(i in seq(3, 681, by = 3)) {
+  list_inpc <- c(list_inpc, inpc$INPC[i])
+  list_años <- c(list_años, inpc$Fecha[i])
+  print(i)
+}
+
+# Crear dataframe con sintaxis correcta
+df <- data.frame(
+  date = as.Date(list_años),
+  inpc = as.double(list_inpc)
+)
+
+# Verificar el resultado
+head(df)
+```
+
+```{r}
+#crear rezago
+df$log_inpc <- c(NA, df$inpc[-length(df$inpc)])
+df$inflacion_trimestral <- df$inpc / df$log_inpc -1
+head(df)
+```
+
+```{r}
+colnames(m1) <- c("date", "M1")
+head(m1)
+```
+
+```{r}
+df_final <- merge(df, m1, by = "date", all.x = TRUE)
+#eliminar filas que tengan un dato NA
+df_final <- na.omit(df_final)
+head(df_final)
+```
+
+```{r}
+# Creo un lag de la masa monetaria M1.
+df_final$m1_lag_01 <- c(NA, df_final$M1[-length(df_final$M1)])
+df_final$inflacion_lag_01 <- c(NA, df_final$inflacion_trimestral[-length(df_final$inflacion_trimestral)])
+
+
+# Hago la regresión con m1 y un lag de m1.
+model <- lm(inflacion_trimestral ~ M1 + m1_lag_01, data = df_final)
+summary(model)
+```
+
+
+```{r}
+coef(model)
+```
+
+
+
+
+
+
+
+
+
+Metodo Koyck
+
+transformación para los datos
+
+CRear rezago
+
+```{r}
+head(GASTO_INGRESO)
+```
+
+```{r}
+
+```
+
+```{r}
+#crear rezago
+GASTO_INGRESO$GCPC_lag_01<- c(NA, GASTO_INGRESO$GCPC[-length(GASTO_INGRESO$GCPC)])
+
+head(GASTO_INGRESO)
+```
+
+```{r}
+model_1 <- lm(GCPC ~ IDPC + GCPC_lag_01, data = GASTO_INGRESO)
+summary(model_1)
+```
+
+```{r}
+coef(model_1)
+
+```
+
+
+Mediana de los rezagos
+```{r}
+mediana_koyck <- function(lambda){
+  return (-(log(2)/log(lambda)))
+}
+
+mediana_koyck(0.7978313)
+```
+#Media de los rezagos
+
+
+```{r}
+media_koyck <- function(lambda){
+  return(1/(1-lambda))
+}
+  
+media_koyck(0.7978313)
+```
+
+
+#Actividad en clase
+
+
+```{r}
+model_3 <- lm(inflacion_trimestral ~ M1 + inflacion_lag_01, data = df_final)
+summary(model_3)
+```
+```{r}
+coef(model_3)
+```
+
+Mediana de los rezagos
+```{r}
+mediana_koyck <- function(lambda){
+  return (-(log(2)/log(lambda)))
+}
+
+mediana_koyck(1.907637e-04 )
+```
+#Media de los rezagos
+
+
+```{r}
+media_koyck <- function(lambda){
+  return(1/(1-lambda))
+}
+  
+media_koyck(1.907637e-04 )
+```
+
+
+
+
+
